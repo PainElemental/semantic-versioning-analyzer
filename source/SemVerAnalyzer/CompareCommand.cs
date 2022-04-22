@@ -7,6 +7,9 @@ namespace Pushpay.SemVerAnalyzer
 {
 	public class CompareCommand
 	{
+		[Option('s', "secondAssembly", Required = false, HelpText = "The second/old/current assembly to compare against. Use this as alternative to specifying a nuget feed in the config.")]
+		public string OldAssembly { get; set; }
+
 		[Option('a', "assembly", Required = true, HelpText = "The built assembly to test.")]
 		public string Assembly { get; set; }
 
@@ -36,6 +39,9 @@ namespace Pushpay.SemVerAnalyzer
 
 		public string FullAssemblyPath => Path.GetFullPath(Assembly);
 		public string AssemblyFileName => Path.GetFileNameWithoutExtension(Assembly);
+
+		public string OldAssemblyFullPath => OldAssembly != null ? Path.GetFullPath(OldAssembly) : string.Empty;
+		public string OldAssemblyFileName => OldAssembly != null ? Path.GetFileNameWithoutExtension(OldAssembly) : string.Empty;
 
 		public string Validate()
 		{

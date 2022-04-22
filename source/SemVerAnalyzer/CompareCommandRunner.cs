@@ -34,14 +34,23 @@ namespace Pushpay.SemVerAnalyzer
 			{
 				localAssembly = AssemblyPublicInterface.Load(command.FullAssemblyPath);
 
-				var bytes = await _nugetClient.GetAssemblyBytesFromPackage(command.PackageName, command.AssemblyFileName, localAssembly.Framework, comments);
-				if (bytes == null)
+				AssemblyPublicInterface onlineAssembly = null;
+				if (string.IsNullOrEmpty(command.OldAssemblyFullPath))
 				{
-					return $"An error has current processing your request:\n\n" +
-					       $"- {string.Join("\n- ", comments)}";
+					var bytes = await _nugetClient.GetAssemblyBytesFromPackage(command.PackageName, command.AssemblyFileName, localAssembly.Framework, comments);
+					if (bytes == null)
+					{
+						return $"An error has current processing your request:\n\n" +
+						       $"- {string.Join("\n- ", comments)}";
+					}
+
+					onlineAssembly = AssemblyPublicInterface.Load(bytes);
+				}
+				else
+				{
+					onlineAssembly = AssemblyPublicInterface.Load(command.OldAssemblyFullPath);
 				}
 
-				var onlineAssembly = AssemblyPublicInterface.Load(bytes);
 
 				var result = _analyzer.AnalyzeVersions(localAssembly, onlineAssembly);
 
