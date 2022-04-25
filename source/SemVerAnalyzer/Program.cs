@@ -36,8 +36,21 @@ namespace Pushpay.SemVerAnalyzer
 			var report = await runner.Compare(command);
 
 			if (!string.IsNullOrWhiteSpace(command.OutputPath))
+			{
 				await File.WriteAllTextAsync(command.OutputPath, report);
+			}
+			
 			Console.WriteLine(report);
+
+			//If everything is OK, report is null.
+			if (!string.IsNullOrEmpty(report))
+			{
+				Environment.Exit(1);
+			}
+			else
+			{
+				Console.WriteLine("SemVerAnalyzer did not find any problems.");
+			}
 		}
 
 		static IConfiguration BuildConfiguration(string configFilePath)
