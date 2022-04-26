@@ -26,7 +26,10 @@ namespace Pushpay.SemVerAnalyzer
 				.AsImplementedInterfaces()
 				.AsSelf();
 
-			builder.RegisterType<NugetClient>()
+			//builder.RegisterType<NugetClient>()
+			//	.AsImplementedInterfaces()
+			//	.AsSelf();
+			builder.RegisterType<NugetClientMs>()
 				.AsImplementedInterfaces()
 				.AsSelf();
 			builder.RegisterType<AssemblyVersionAnalyzer>()
