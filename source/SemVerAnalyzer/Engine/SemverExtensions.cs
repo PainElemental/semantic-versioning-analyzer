@@ -6,7 +6,8 @@ namespace Pushpay.SemVerAnalyzer.Engine
 {
 	public static class SemverExtensions
 	{
-		static readonly Regex _versionFormat = new Regex(@"^(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)((?<prerelease>-\w*)|(?<trailer>\.0))?(?<githash>\+[0-9a-f]{40})?$");
+		//static readonly Regex _versionFormat = new Regex(@"^(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)((?<prerelease>-\w*)|(?<trailer>\.0))?(?<githash>\+[0-9a-f]{40})?$");
+		static readonly Regex _versionFormat = new Regex(@"^(?<major>[0-9]+)\.(?<minor>[0-9]+)\.(?<patch>[0-9]+)((?<prerelease>-[\w\./\+]*)|(?<trailer>\.0))?(?<githash>\+[0-9a-f]{40})?$");
 
 		public static int MajorVersion(this string version) => version.ToSemver().Major;
 		public static int MinorVersion(this string version) => version.ToSemver().Minor;
