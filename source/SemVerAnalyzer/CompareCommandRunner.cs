@@ -37,7 +37,8 @@ namespace Pushpay.SemVerAnalyzer
 				AssemblyPublicInterface onlineAssembly = null;
 				if (string.IsNullOrEmpty(command.OldAssemblyFullPath))
 				{
-					var bytes = await _nugetClient.GetAssemblyBytesFromPackage(command.PackageName, command.AssemblyFileName, localAssembly.Framework, comments);
+					bool includePrerelease = command.IncludePrerelease == true;
+					var bytes = await _nugetClient.GetAssemblyBytesFromPackage(command.PackageName, command.PackageVersion, includePrerelease, command.AssemblyFileName, localAssembly.Framework, comments);
 					if (bytes == null)
 					{
 						return $"An error has current processing your request:\n\n" +

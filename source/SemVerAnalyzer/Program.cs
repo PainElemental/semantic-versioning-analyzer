@@ -23,23 +23,16 @@ namespace Pushpay.SemVerAnalyzer
 
 		static async Task Compare(CompareCommand command)
 		{
-			if (string.IsNullOrEmpty(command.Configuration))
-			{
-				//if no config file was specified, use the one in the current directory
-				var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
-				string currentDir = Path.GetDirectoryName(executingAssembly.Location);
-				command.Configuration = Path.GetFullPath(Path.Combine(currentDir, "config.json"));
-			}
-
-			var config = BuildConfiguration(command.Configuration);
-			ConfigureServices(config, command);
-
 			var validationResult = command.Validate();
-			if (validationResult != null) {
+			if (validationResult != null)
+			{
 				Console.WriteLine($"Error:\n\t{validationResult}");
 				Environment.Exit(1);
 			}
 
+			var config = BuildConfiguration(command.Configuration);
+			ConfigureServices(config, command);
+			
 			var runner = _container.Resolve<CompareCommandRunner>();
 			var report = await runner.Compare(command);
 

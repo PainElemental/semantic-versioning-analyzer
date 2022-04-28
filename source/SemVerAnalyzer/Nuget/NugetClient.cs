@@ -22,7 +22,7 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 			_settings = settings;
 		}
 
-		public async Task<byte[]> GetAssemblyBytesFromPackage(string packageName, string fileName, string framework, List<string> comments)
+		public async Task<byte[]> GetAssemblyBytesFromPackage(string packageName, string packageVersion, bool includePrerelease, string fileName, string framework, List<string> comments)
 		{
 			try
 			{

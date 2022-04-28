@@ -7,11 +7,11 @@ namespace Pushpay.SemVerAnalyzer
 {
 	public class CompareCommand
 	{
-		[Option('s', "secondAssembly", Required = false, HelpText = "The second/old/current assembly to compare against. Use this as alternative to specifying a nuget feed in the config.")]
-		public string OldAssembly { get; set; }
-
 		[Option('a', "assembly", Required = true, HelpText = "The built assembly to test.")]
 		public string Assembly { get; set; }
+
+		[Option('s', "secondAssembly", Required = false, HelpText = "The second/old/current assembly to compare against. Use this as alternative to specifying a nuget feed in the config.")]
+		public string OldAssembly { get; set; }
 
 		[Option('o', "outputPath", Required = false, HelpText = "The output file path for the report.")]
 		public string OutputPath { get; set; }
@@ -24,6 +24,12 @@ namespace Pushpay.SemVerAnalyzer
 
 		[Option('p', "package-name", HelpText = "If the package name is different than the DLL file name, specify it here.")]
 		public string PackageName { get; set; }
+
+		[Option('v', "package-version", HelpText = "If a specific package version should be downloaded from the feed, specify it here.")]
+		public string PackageVersion { get; set; }
+
+		[Option('i', "include-prerelease", HelpText = "Include prerelease packages when looking for the version in the feed")]
+		public bool? IncludePrerelease { get; set; }
 
 		[Option("omit-disclaimer", HelpText = "Omits the disclaimer paragraph that appears at the top of the output.")]
 		public bool? OmitDisclaimer { get; set; }
@@ -45,6 +51,14 @@ namespace Pushpay.SemVerAnalyzer
 
 		public string Validate()
 		{
+			if (string.IsNullOrEmpty(Configuration))
+			{
+				//if no config file was specified, use the one in the current directory
+				var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+				string currentDir = Path.GetDirectoryName(executingAssembly.Location);
+				Configuration = Path.GetFullPath(Path.Combine(currentDir, "config.json"));
+			}
+
 			if (string.IsNullOrWhiteSpace(PackageName))
 			{
 				var match = Regex.Match(Assembly, @"^(.*(\/|\\))?(?<packageName>.*)\.dll$", RegexOptions.IgnoreCase);

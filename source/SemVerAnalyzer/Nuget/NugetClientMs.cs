@@ -32,7 +32,7 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 			_settings = settings;
 		}
 
-		public async Task<byte[]> GetAssemblyBytesFromPackage(string packageName, string fileName, string framework, List<string> comments)
+		public async Task<byte[]> GetAssemblyBytesFromPackage(string packageName, string packageVersion, bool includePrerelease, string fileName, string framework, List<string> comments)
 		{
 			ILogger logger = NullLogger.Instance;
 			CancellationToken cancellationToken = CancellationToken.None;
@@ -43,14 +43,14 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 			SourceCacheContext cache = new SourceCacheContext();
 			PackageSearchResource packageSearchResource = await repository.GetResourceAsync<PackageSearchResource>();
 			FindPackageByIdResource findPackageByIdResource = await repository.GetResourceAsync<FindPackageByIdResource>();
-			SearchFilter searchFilter = new SearchFilter(includePrerelease: true);
+			SearchFilter searchFilter = new SearchFilter(includePrerelease: includePrerelease);
 
 			int skip = 0;
 			IPackageSearchMetadata matchingPackage = null;
 			while (true)
 			{
 				var results = (await packageSearchResource.SearchAsync(
-					"", // search string
+					packageName, // search string
 					searchFilter,
 					skip: skip,
 					take: 20,
@@ -63,7 +63,7 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 				}
 				skip += results.Count;
 
-				
+
 				foreach (IPackageSearchMetadata result in results)
 				{
 					if (result.Identity.Id == packageName)
@@ -84,16 +84,38 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 			//get all versions
 			var versions = await matchingPackage.GetVersionsAsync();
 
-			//find the latest version
-			Dictionary<Semver, VersionInfo> dicVersions = new Dictionary<Semver, VersionInfo>();
-			foreach (var v in versions)
+
+			VersionInfo matchingVersionInfo = null;
+			if (string.IsNullOrEmpty(packageVersion))
 			{
-				var semVer = v.Version.OriginalVersion.ToSemver();
-				dicVersions.Add(semVer, v);
+				Dictionary<Semver, VersionInfo> dicVersions = new Dictionary<Semver, VersionInfo>();
+				foreach (var v in versions)
+				{
+					var semVer = v.Version.OriginalVersion.ToSemver();
+					dicVersions.Add(semVer, v);
+				}
+
+				//find the highest version
+				var highestSemVer = dicVersions.Keys.OrderByDescending(v => v).First();
+				matchingVersionInfo = dicVersions[highestSemVer];
+			}
+			else
+			{
+				foreach (var v in versions)
+				{
+					if (v.Version.OriginalVersion == packageVersion)
+					{
+						matchingVersionInfo = v;
+						break;
+					}
+				}
 			}
 
-			var highestSemVer = dicVersions.Keys.OrderByDescending(v => v).First();
-			var highestVersionInfo = dicVersions[highestSemVer];
+			if (matchingVersionInfo == null)
+			{
+				comments.Add($"Error - package '{packageName}' not found in version '{packageVersion}' in feed '{nugetFeed}'");
+				return null;
+			}
 
 
 			byte[] bytes;
@@ -103,7 +125,7 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 				{
 					await findPackageByIdResource.CopyNupkgToStreamAsync(
 						matchingPackage.Identity.Id, // package id
-						highestVersionInfo.Version,
+						matchingVersionInfo.Version,
 						packageStream,
 						cache,
 						logger,
