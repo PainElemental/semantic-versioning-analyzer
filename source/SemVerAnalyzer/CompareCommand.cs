@@ -16,7 +16,7 @@ namespace Pushpay.SemVerAnalyzer
 		[Option('o', "outputPath", Required = false, HelpText = "The output file path for the report.")]
 		public string OutputPath { get; set; }
 
-		[Option('c', "config", Required = true, HelpText = "Path to the configuration file.")]
+		[Option('c', "config", Required = false, HelpText = "Path to the configuration file.")]
 		public string Configuration { get; set; }
 
 		[Option('r', "additional-rules", Required = false, HelpText = "A path to a single assembly or folder of assemblies which contain additional rules.")]
@@ -57,7 +57,7 @@ namespace Pushpay.SemVerAnalyzer
 				return $"Cannot find assembly file '{Assembly}'";
 
 			if (!File.Exists(Configuration))
-				return $"Cannot find assembly file '{Assembly}'";
+				return $"Cannot find config file '{Configuration}'";
 
 			return null;
 		}
