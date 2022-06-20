@@ -54,9 +54,22 @@ namespace Pushpay.SemVerAnalyzer
 			if (string.IsNullOrEmpty(Configuration))
 			{
 				//if no config file was specified, use the one in the current directory
+        //note that 'executingAssembly.Location' code works only when not running as self-contained exe
 				var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
 				string currentDir = Path.GetDirectoryName(executingAssembly.Location);
-				Configuration = Path.GetFullPath(Path.Combine(currentDir, "config.json"));
+				if (currentDir != null)
+				{
+					Configuration = Path.GetFullPath(Path.Combine(currentDir, "config.json"));
+				}
+				else
+				{
+					string exePath = Extensions.GetExecutablePath();
+					currentDir = Path.GetDirectoryName(exePath);
+					if (currentDir != null)
+					{
+						Configuration = Path.GetFullPath(Path.Combine(currentDir, "config.json"));
+					}
+				}
 			}
 
 			if (string.IsNullOrWhiteSpace(PackageName))
@@ -74,6 +87,31 @@ namespace Pushpay.SemVerAnalyzer
 				return $"Cannot find config file '{Configuration}'";
 
 			return null;
+		}
+
+		/// <summary>
+		/// see https://stackoverflow.com/questions/66410587/get-self-contained-exes-path
+		/// This is for getting the ExecutablePath when running as self-contained executable.
+		/// In this case 'System.Reflection.Assembly.GetExecutingAssembly().Location' is empty!!!
+		/// </summary>
+		public static class Extensions
+		{
+			[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+			static extern uint GetModuleFileName(IntPtr hModule, System.Text.StringBuilder lpFilename, int nSize);
+			static readonly int MAX_PATH = 255;
+			public static string GetExecutablePath()
+			{
+				if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+				{
+					var sb = new System.Text.StringBuilder(MAX_PATH);
+					GetModuleFileName(IntPtr.Zero, sb, MAX_PATH);
+					return sb.ToString();
+				}
+				else
+				{
+					return System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+				}
+			}
 		}
 	}
 }
