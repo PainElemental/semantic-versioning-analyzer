@@ -5,8 +5,6 @@
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <RootNamespace>Pushpay.SemVerAnalyzer</RootNamespace>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>analyze-semver</ToolCommandName>
     <Version>2.4.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.4.0.0</FileVersion>
@@ -17,7 +15,12 @@
     <PackageIcon>PushpayLogo.png</PackageIcon>
     <RepositoryUrl>https://github.com/pushpay-labs/semantic-versioning-analyzer</RepositoryUrl>
     <PackageTags>semantic-version dotnet-tool semver nuget</PackageTags>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<IsTool>True</IsTool>
+	<PackAsTool>False</PackAsTool>
+	<ToolCommandName>analyze-semver</ToolCommandName>
+	<PackageId>SemVerAnalyzer</PackageId>
+	<Description>Semantic Versioning Analyzer compares a newly built assembly against the latest version of the assembly in the nuget feed. It will become active automatically when a project adds a reference to this nuget package.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,10 +44,27 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+	<None Include="build\**">
+	  <Pack>True</Pack>
+	  <PackagePath>build\</PackagePath>
+	</None>
+	<None Include="buildMultiTargeting\**">
+	  <Pack>True</Pack>
+	  <PackagePath>buildMultiTargeting\</PackagePath>
+	</None>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SemVerAnalyzer.Abstractions\SemVerAnalyzer.Abstractions.csproj" />
   </ItemGroup>
+
+  <Target Name="IncludeAllFilesInTargetDir" AfterTargets="Build">
+    <ItemGroup>
+      <None Include="$(TargetDir)\**">
+        <Pack>true</Pack>
+        <PackagePath>tools</PackagePath>
+      </None>
+    </ItemGroup>
+  </Target>	
 
 </Project>
