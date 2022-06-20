@@ -60,9 +60,17 @@ namespace Pushpay.SemVerAnalyzer
 					comments = result.GetAllComments();
 					if (_settings.IncludeHeader)
 					{
-						report = command.AssemblyFileName == command.PackageName
-							? $"# {command.AssemblyFileName}\n\n"
-							: $"# {command.AssemblyFileName} ( {command.PackageName} )\n\n";
+						if (string.IsNullOrEmpty(command.OldAssemblyFullPath))
+						{
+							report = command.AssemblyFileName == command.PackageName
+								? $"#Assembly: {command.AssemblyFileName}\n\n"
+								: $"#Assembly: {command.AssemblyFileName} (Package: {command.PackageName} )\n\n";
+						}
+						else
+						{
+							report = $"#Assembly: {command.FullAssemblyPath }\n";
+							report = $"#Old Assembly: {command.OldAssemblyFullPath }\n\n";
+						}
 					}
 					if (!_settings.OmitDisclaimer)
 					{
@@ -73,6 +81,7 @@ namespace Pushpay.SemVerAnalyzer
 						         "**Please use your best judgment when updating the version.  You know your change better than this check can.**\n\n";
 					}
 					report += $"## Summary\n\n" +
+                    $"Old version: `{onlineAssembly.Version}`\n" +
 					          $"Actual new version: `{localAssembly.Version}` ({result.ActualBump})\n" +
 					          $"Suggested new version: `{onlineAssembly.Version.GetSuggestedVersion(result.CalculatedBump)}` ({result.CalculatedBump}).\n";
 					if (comments.Any())

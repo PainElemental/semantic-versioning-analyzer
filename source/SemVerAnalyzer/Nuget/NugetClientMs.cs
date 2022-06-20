@@ -83,7 +83,7 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 
 			//get all versions
 			var versions = await matchingPackage.GetVersionsAsync();
-
+			
 
 			VersionInfo matchingVersionInfo = null;
 			if (string.IsNullOrEmpty(packageVersion))
@@ -116,7 +116,10 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 				comments.Add($"Error - package '{packageName}' not found in version '{packageVersion}' in feed '{nugetFeed}'");
 				return null;
 			}
-
+			else
+			{
+				//Console.WriteLine($"Downloading package '{packageName}' in version '{matchingVersionInfo.Version.OriginalVersion}' from feed '{nugetFeed}' ...");
+			}
 
 			byte[] bytes;
 			try
