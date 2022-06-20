@@ -1,9 +1,9 @@
 {
   "profiles": {
-	"SemVerAnalyzer": {
-		"commandName": "Project",
-		"commandLineArgs": "-a C:\\Users\\ritterb\\source\\repos\\PackageValidationTestNetFramework\\bin\\Release\\net48\\PackageValidationTestNetFramework.dll -c C:\\Tmp\\config.Json -i true",
-		"workingDirectory": "$(SolutionDir)"
-	}
+    "SemVerAnalyzer": {
+      "commandName": "Project",
+      "commandLineArgs": " -a \"C:\\TFS_Source\\TPA\\DevTools_Source\\internal\\Log4Net\\2.0\\src\\log4net\\bin\\Release\\netstandard2.0\\log4net.dll\" -p log4net --omit-disclaimer true --include-header true ",
+      "workingDirectory": "$(SolutionDir)"
+    }
   }
 }

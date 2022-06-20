@@ -4,16 +4,23 @@
         <SemVerAnalyzerAssembly>$(MSBuildThisFileDirectory)..\tools\SemVerAnalyzer.exe</SemVerAnalyzerAssembly>
     </PropertyGroup>
 
-  <Target Name="RunSemVerAnalyzer"
-          AfterTargets="CopyFilesToOutputDirectory">
-		  <Message Text="RunSemVerAnalyzer started at : $([System.DateTime]::Now.ToString(`dd.MM.yyyy HH:mm:ss`))" Importance="high"/>
-		  
-		  <Message Text="TargetFramework : $(TargetFramework)" Importance="high"/>
-		  <Message Text="TargetPath : $(TargetPath)" Importance="high"/>
+    <Target Name="RunSemVerAnalyzer" AfterTargets="CopyFilesToOutputDirectory">
 
-		  <Exec Command="&quot;$(SemVerAnalyzerAssembly)&quot; -a &quot;$(TargetPath)&quot; --omit-disclaimer true --include-header true --allow-actual-bump true" />
+        <Message Text="RunSemVerAnalyzer started at : $([System.DateTime]::Now.ToString(`dd.MM.yyyy HH:mm:ss`))" Importance="high"/>
 
-		  <Message Text="RunSemVerAnalyzer ended at : $([System.DateTime]::Now.ToString(`dd.MM.yyyy HH:mm:ss`))" Importance="high"/>
-  </Target>
+        <Message Text="TargetFramework : $(TargetFramework)" Importance="high"/>
+        <Message Text="TargetPath : $(TargetPath)" Importance="high"/>
+        <Message Text="PackageId : $(PackageId)" Importance="high"/>
+        <Message Text="SemVerAnalyzerBaselinePackageVersion : $(SemVerAnalyzerBaselinePackageVersion)" Condition="'$(SemVerAnalyzerBaselinePackageVersion)' != ''" Importance="high"/>
+        <Message Text="Command :" Importance="high"/>
+
+        <Message Text="&quot;$(SemVerAnalyzerAssembly)&quot; -a &quot;$(TargetPath)&quot; -p $(PackageId) --omit-disclaimer true --include-header true --allow-actual-bump true" Condition="'$(SemVerAnalyzerBaselinePackageVersion)' == ''" Importance="high"/>
+        <Exec Command="&quot;$(SemVerAnalyzerAssembly)&quot; -a &quot;$(TargetPath)&quot; -p $(PackageId) --omit-disclaimer true --include-header true --allow-actual-bump true" Condition="'$(SemVerAnalyzerBaselinePackageVersion)' == ''" />
+
+        <Message Text="&quot;$(SemVerAnalyzerAssembly)&quot; -a &quot;$(TargetPath)&quot; -p $(PackageId) -v $(SemVerAnalyzerBaselinePackageVersion) --omit-disclaimer true --include-header true --allow-actual-bump true" Condition="'$(SemVerAnalyzerBaselinePackageVersion)' != ''" Importance="high"/>
+        <Exec Command="&quot;$(SemVerAnalyzerAssembly)&quot; -a &quot;$(TargetPath)&quot; -p $(PackageId) -v $(SemVerAnalyzerBaselinePackageVersion) --omit-disclaimer true --include-header true --allow-actual-bump true" Condition="'$(SemVerAnalyzerBaselinePackageVersion)' != ''" />
+
+        <Message Text="RunSemVerAnalyzer ended at : $([System.DateTime]::Now.ToString(`dd.MM.yyyy HH:mm:ss`))" Importance="high"/>
+    </Target>
 
 </Project>
