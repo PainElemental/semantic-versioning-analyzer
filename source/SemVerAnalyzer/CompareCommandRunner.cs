@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Pushpay.SemVerAnalyzer.Abstractions;
 using Pushpay.SemVerAnalyzer.Assembly;
 using Pushpay.SemVerAnalyzer.Engine;
 using Pushpay.SemVerAnalyzer.Nuget;
@@ -34,6 +34,12 @@ namespace Pushpay.SemVerAnalyzer
 			{
 				localAssembly = AssemblyPublicInterface.Load(command.FullAssemblyPath);
 
+				//early exit, if MajorVersion is 0. All changes are allowed, if MajorVersion is 0.
+				if(localAssembly.Version.MajorVersion() == 0)
+				{
+					return null;
+				}
+
 				AssemblyPublicInterface onlineAssembly = null;
 				if (string.IsNullOrEmpty(command.OldAssemblyFullPath))
 				{
@@ -41,7 +47,7 @@ namespace Pushpay.SemVerAnalyzer
 					var bytes = await _nugetClient.GetAssemblyBytesFromPackage(command.PackageName, command.PackageVersion, includePrerelease, command.AssemblyFileName, localAssembly.Framework, comments);
 					if (bytes == null)
 					{
-						return $"An error has current processing your request:\n\n" +
+						return $"An error has occurred processing your request:\n\n" +
 						       $"- {string.Join("\n- ", comments)}";
 					}
 
@@ -57,6 +63,13 @@ namespace Pushpay.SemVerAnalyzer
 
 				if (result.ActualBump != result.CalculatedBump)
 				{
+					if (command.AllowActualBump == true &&
+					    result.ActualBump > result.CalculatedBump)
+					{
+						//When AllowActualBump is specified, the actual bump is allowed to be greater than the calculated bump!
+						return null;
+					}
+
 					comments = result.GetAllComments();
 					if (_settings.IncludeHeader)
 					{
@@ -81,8 +94,8 @@ namespace Pushpay.SemVerAnalyzer
 						         "**Please use your best judgment when updating the version.  You know your change better than this check can.**\n\n";
 					}
 					report += $"## Summary\n\n" +
-                    $"Old version: `{onlineAssembly.Version}`\n" +
-					          $"Actual new version: `{localAssembly.Version}` ({result.ActualBump})\n" +
+					          $"Old version: `{onlineAssembly.Version}`\n" +
+							  $"Actual new version: `{localAssembly.Version}` ({result.ActualBump})\n" +
 					          $"Suggested new version: `{onlineAssembly.Version.GetSuggestedVersion(result.CalculatedBump)}` ({result.CalculatedBump}).\n";
 					if (comments.Any())
 					{

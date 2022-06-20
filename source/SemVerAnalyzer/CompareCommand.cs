@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -28,7 +29,7 @@ namespace Pushpay.SemVerAnalyzer
 		[Option('v', "package-version", HelpText = "If a specific package version should be downloaded from the feed, specify it here.")]
 		public string PackageVersion { get; set; }
 
-		[Option('i', "include-prerelease", HelpText = "Include prerelease packages when looking for the version in the feed")]
+		[Option( 'i', "include-prerelease", HelpText = "Include prerelease packages when looking for the version in the feed")]
 		public bool? IncludePrerelease { get; set; }
 
 		[Option("omit-disclaimer", HelpText = "Omits the disclaimer paragraph that appears at the top of the output.")]
@@ -39,6 +40,9 @@ namespace Pushpay.SemVerAnalyzer
 
 		[Option("assume-changes", HelpText = "Assumes that something changed, making Patch the lowest bump rather than None. Default is false.")]
 		public bool? AssumeChanges { get; set; }
+
+		[Option("allow-actual-bump", HelpText = "Allow the actual version bump to be greater than the calculated version bump. Default is false.")]
+		public bool? AllowActualBump { get; set; }
 
 		[Option('f', "framework", Required = false, HelpText = "Indicates the framework from the Nuget package to use as a comparison.")]
 		public string Framework { get; set; }
@@ -54,7 +58,7 @@ namespace Pushpay.SemVerAnalyzer
 			if (string.IsNullOrEmpty(Configuration))
 			{
 				//if no config file was specified, use the one in the current directory
-        //note that 'executingAssembly.Location' code works only when not running as self-contained exe
+				//note that 'executingAssembly.Location' code works only when not running as self-contained exe
 				var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
 				string currentDir = Path.GetDirectoryName(executingAssembly.Location);
 				if (currentDir != null)

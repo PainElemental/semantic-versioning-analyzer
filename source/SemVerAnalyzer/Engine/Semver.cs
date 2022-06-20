@@ -22,9 +22,20 @@ namespace Pushpay.SemVerAnalyzer.Engine
 			Trailer = trailer;
 		}
 
-		public override string ToString() => $"{Major}.{Minor}.{Patch}{Prerelease}{Trailer}";
+		public override string ToString()
+		{
+			if (string.IsNullOrEmpty(Trailer))
+			{
+				return $"{Major}.{Minor}.{Patch}{Prerelease}";
+			}
+			else
+			{
+				return $"{Major}.{Minor}.{Patch}.{Trailer}{Prerelease}";
+			}
+		}
 
-		public int CompareTo(Semver other) {
+		public int CompareTo(Semver other)
+		{
 			var difference = Major.CompareTo(other.Major);
 			if (difference != 0) return difference;
 			
