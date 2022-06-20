@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "SemVerAnalyzer": {
-      "commandName": "Project",
-      "commandLineArgs": "-a C:\\projects\\json-everything\\JsonPath\\bin\\Release\\netstandard2.1\\JsonPath.Net.dll -c C:\\projects\\json-everything\\.github\\semver_config.json",
-      "workingDirectory": "$(SolutionDir)"
-    }
+	"SemVerAnalyzer": {
+		"commandName": "Project",
+		"commandLineArgs": "-a C:\\Users\\ritterb\\source\\repos\\PackageValidationTestNetFramework\\bin\\Release\\net48\\PackageValidationTestNetFramework.dll -c C:\\Tmp\\config.Json -i true",
+		"workingDirectory": "$(SolutionDir)"
+	}
   }
 }
