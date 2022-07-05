@@ -37,83 +37,71 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 			ILogger logger = NullLogger.Instance;
 			CancellationToken cancellationToken = CancellationToken.None;
 
-			string nugetFeed = _config.RepositoryUrl;
-			SourceRepository repository = Repository.Factory.GetCoreV3(nugetFeed);
-
 			SourceCacheContext cache = new SourceCacheContext();
-			PackageSearchResource packageSearchResource = await repository.GetResourceAsync<PackageSearchResource>();
-			FindPackageByIdResource findPackageByIdResource = await repository.GetResourceAsync<FindPackageByIdResource>();
-			SearchFilter searchFilter = new SearchFilter(includePrerelease: includePrerelease);
+			SourceRepository repository = Repository.Factory.GetCoreV3(_config.RepositoryUrl);
+			FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
 
-			int skip = 0;
-			IPackageSearchMetadata matchingPackage = null;
-			while (true)
+			var versions = await resource.GetAllVersionsAsync(packageName, cache, logger, cancellationToken);
+			var versionsList = versions.ToList();
+
+			//Console.WriteLine($"Found '{versionsList.Count}' versions of package '{packageName}'");
+
+
+			//look for the correct version
+			NuGet.Versioning.NuGetVersion matchingVersionInfo = null;
+			if (!string.IsNullOrEmpty(packageVersion))
 			{
-				var results = (await packageSearchResource.SearchAsync(
-					packageName, // search string
-					searchFilter,
-					skip: skip,
-					take: 20,
-					logger,
-					cancellationToken)).ToList();
-
-				if (results.Count == 0)
+				//look for the specified version
+				foreach (var version in versionsList)
 				{
-					break;
-				}
-				skip += results.Count;
-
-
-				foreach (IPackageSearchMetadata result in results)
-				{
-					if (result.Identity.Id == packageName)
+					if (version.IsPrerelease &&
+						includePrerelease == false)
 					{
-						//Console.WriteLine($"Found matching package '{result.Identity.Id}' in feed '{nugetFeed}'");
-						matchingPackage = result;
+						continue;
+					}
+
+					if (version.OriginalVersion == packageVersion)
+					{
+						matchingVersionInfo = version;
 						break;
 					}
 				}
 			}
-
-			if (matchingPackage == null)
+			else
 			{
-				comments.Add($"Error - package '{packageName}' not found in feed '{nugetFeed}'");
-				return null;
-			}
-
-			//get all versions
-			var versions = await matchingPackage.GetVersionsAsync();
-			
-
-			VersionInfo matchingVersionInfo = null;
-			if (string.IsNullOrEmpty(packageVersion))
-			{
-				Dictionary<Semver, VersionInfo> dicVersions = new Dictionary<Semver, VersionInfo>();
+				Dictionary<Semver, NuGet.Versioning.NuGetVersion> dicVersions = new Dictionary<Semver, NuGet.Versioning.NuGetVersion>();
 				foreach (var v in versions)
 				{
-					var semVer = v.Version.OriginalVersion.ToSemver();
+					var semVer = v.OriginalVersion.ToSemver();
 					dicVersions.Add(semVer, v);
 				}
 
-				//find the highest version
-				var highestSemVer = dicVersions.Keys.OrderByDescending(v => v).First();
-				matchingVersionInfo = dicVersions[highestSemVer];
-			}
-			else
-			{
-				foreach (var v in versions)
+				var orderedVersions = dicVersions.Keys.OrderBy(v => v);
+
+				if (includePrerelease)
 				{
-					if (v.Version.OriginalVersion == packageVersion)
+					//take the latest version
+					var highestSemVer = orderedVersions.Last();
+					matchingVersionInfo = dicVersions[highestSemVer];
+				}
+				else
+				{
+					//take the latest version that is not prerelease
+					foreach (var version in orderedVersions)
 					{
-						matchingVersionInfo = v;
-						break;
+						var v = dicVersions[version];
+
+						if (!v.IsPrerelease)
+						{
+							matchingVersionInfo = v;
+						}
 					}
 				}
 			}
 
 			if (matchingVersionInfo == null)
 			{
-				comments.Add($"Error - package '{packageName}' not found in version '{packageVersion}' in feed '{nugetFeed}'");
+				comments.Add($"Error - package '{packageName}' not found in version '{packageVersion}' in feed '{_config.RepositoryUrl}'");
 				return null;
 			}
 			else
@@ -126,9 +114,9 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 			{
 				await using (var packageStream = new MemoryStream())
 				{
-					await findPackageByIdResource.CopyNupkgToStreamAsync(
-						matchingPackage.Identity.Id, // package id
-						matchingVersionInfo.Version,
+					await resource.CopyNupkgToStreamAsync(
+						packageName, // package id
+						matchingVersionInfo,
 						packageStream,
 						cache,
 						logger,
@@ -164,6 +152,7 @@ namespace Pushpay.SemVerAnalyzer.Nuget
 
 			return bytes;
 		}
+
 
 		// source strings following format from https://docs.microsoft.com/en-us/dotnet/api/system.runtime.versioning.targetframeworkattribute?view=net-5.0
 		// target strings from https://docs.microsoft.com/en-us/dotnet/standard/frameworks
